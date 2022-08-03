@@ -77,8 +77,8 @@ On_ICyan='\033[0;106m'    # Cyan
 On_IWhite='\033[0;107m'   # White
 # }}}
 
-echo $White"welcome to install SpaceVim Kit"$Color_off
-echo $White"author: huanghy\n"$Color_off
+echo -e $White"welcome to install SpaceVim Kit"$Color_off
+echo -e $White"author: huanghy\n"$Color_off
 
 HAVE_GETOPTS=0
 VERBOSE=0
@@ -100,18 +100,18 @@ usage(){
 }
 
 log_e(){
-    echo "$BRed[LOG] $@$Color_off"
+    echo -e "$BRed[LOG] $@$Color_off"
     return 0
 }
 
 log_i(){
-    echo "$BBlue[LOG] $Color_off$@"
+    echo -e "$BBlue[LOG] $Color_off$@"
     return 0
 }
 
 log_d(){
     if [ ${VERBOSE} -eq 1 ]; then
-        echo "$BYellow[DEBUG] $Color_off$@"; 
+        echo -e "$BYellow[DEBUG] $Color_off$@";
     fi
     return 0
 }
