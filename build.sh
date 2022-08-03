@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+#set -e
 #set -o pipefail
 
 # Init option
@@ -100,12 +100,16 @@ usage(){
 }
 
 log_e(){
-    echo -e "$BRed[LOG] $@$Color_off"
+    module=$1
+    shift
+    echo -e "$BRed[${module}] $Color_off$@"
     return 0
 }
 
 log_i(){
-    echo -e "$BBlue[LOG] $Color_off$@"
+    module=$1
+    shift
+    echo -e "$BBlue[${module}] $Color_off$@"
     return 0
 }
 
@@ -116,18 +120,26 @@ log_d(){
     return 0
 }
 
+log_ok(){
+    module=$1
+    shift
+    echo -e "$BGreen[${module}] $Color_off$@"
+    return 0
+}
+
 install_soft(){
+    log_i INSTALL "$@"
     log_d "${CMD_INSTALL} $@"
 
     if [ ${TEST} -eq 1 ]; then
         return 0
     fi
 
-    ${CMD_INSTALL} $@
+    su -c "${CMD_INSTALL} $*"
     if [ $? -eq 0 ]; then
-        echo "[install] $@ ok!"
+        log_ok INSTALL "$@ ok!"
     else
-        log_e '[install] $@ fail!'
+        log_e INSTALL "$@ fail!"
         exit 1
     fi
 
@@ -140,11 +152,11 @@ check_param() {
         while getopts "vth" opt; do
             case $opt in
                 v)
-                    log_i "verbose mode"
+                    log_i INFO "verbose mode"
                     VERBOSE=1
                     ;;
                 t)
-                    log_i "test mode"
+                    log_i INFO "test mode"
                     TEST=1
                     ;;
                 h)
@@ -164,72 +176,89 @@ check_param() {
 check_package_manager() {
     if command -v apt-get 1>/dev/null
     then
-        log_i 'apt-get is found.'
+        log_ok INFO "apt-get is found."
         PACKAGE_MANAGER="apt-get"
         CMD_INSTALL="apt-get install -y -q"
     elif command -v yum 1>/dev/null
     then
-        log_i 'yum is found.'
+        log_ok INFO "yum is found."
         PACKAGE_MANAGER="yum"
         CMD_INSTALL="yum install -y"
     elif command -v pacman 1>/dev/null
     then
-        log_i 'pacman is found.'
+        log_ok INFO "pacman is found."
         PACKAGE_MANAGER="pacman"
-        CMD_INSTALL="pacman -Sy --needed"
+        CMD_INSTALL="pacman -S --needed --quiet"
     else
-        log_e 'Package manager not found!'
+        log_e INFO "Package manager not found!"
     fi
 }
 
-install_zsh() {
-    install_soft zsh
+install_ohmyzsh() {
+    if [ -e ~/.oh-my-zsh ];then
+        log_i INSTALL "oh-my-zsh already exists"
+        return
+    fi
+
+    #oh-my-zsh
+    echo '[install] oh-my-zsh'
 
     if [ ! -d tmp ]; then
         log_d 'make directory: tmp'
         mkdir tmp
     fi
 
-    #oh-my-zsh
-    log_i 'install oh-my-zsh'
-
     if [ ${TEST} -eq 0 ]; then
-        wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O tmp/install.sh
+	      wget https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O tmp/install.sh
         if [ $? -eq 0 ]; then
-            log_i 'download oh-my-zsh ok!'
+            log_ok INSTALL 'download oh-my-zsh ok!'
             sh tmp/install.sh
             if [ $? -eq 0 ]; then
-                log_i 'install oh-my-zsh ok!'
+                log_ok INSTALL 'oh-my-zsh ok!'
             else
-                log_e 'install oh-my-zsh fail!'
+                log_e INSTALL 'oh-my-zsh fail!'
             fi
         else
-            log_e 'download oh-my-zsh fail!'
+            log_e DOWNLOAD "download oh-my-zsh fail!"
         fi
     fi
 }
 
+#SpaceVim
 install_spacevim() {
-    #SpaceVim
-    log_i 'install SpaceVim'
-    if [ ${TEST} -eq 0 ]; then
-        curl -sLf https://spacevim.org/cn/install.sh | bash
+    log_i INSTALL "SpaceVim"
+    if [ -e ~/.SpaceVim ];then
+        log_i INSTALL "SpaceVim already exists"
+        return
     fi
+
+    if [ ${TEST} -eq 0 ]; then
+	      curl -sLf https://spacevim.org/cn/install.sh | bash
+        if [ $? -eq 0 ]; then
+            log_ok INSTALL "SpaveVim ok!"
+        fi
+    fi
+}
+
+clear_target() {
+  log_d "clear target"
+  rm -rf tmp
+  rm -f wget-log*
 }
 
 main() {
     check_param $@
     check_package_manager
     
-    install_soft curl wget git neovim
-    install_zsh
+    install_soft curl wget git neovim vim zsh
+    install_ohmyzsh
     install_spacevim
     
     #install extend software package
     install_soft tig ripgrep lsd htop tree bat
-    install_soft fd-find
-    install_soft ripgrepp
+    #fd-find
     
+    clear_target
     return 0
 }
 
