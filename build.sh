@@ -92,7 +92,7 @@ fi
 # Functions {{{
 usage(){
     echo "Usage:"
-    echo "  makeide [options]\n"
+    echo "  ./build.sh [options]\n"
     echo "Options:"
     echo "  -v          Verbose mode"
     echo "  -t          Don't actually run any recipe; just print them."
@@ -238,6 +238,9 @@ install_spacevim() {
             log_ok INSTALL "SpaveVim ok!"
         fi
     fi
+
+    log_i CONF "configure SpaceVim"
+    cp -f config/spacevim.conf ~/.SpaceVim.d/init.toml
 }
 
 clear_target() {
