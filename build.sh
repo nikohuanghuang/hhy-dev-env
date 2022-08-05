@@ -235,12 +235,15 @@ install_spacevim() {
     if [ ${TEST} -eq 0 ]; then
 	      curl -sLf https://spacevim.org/cn/install.sh | bash
         if [ $? -eq 0 ]; then
-            log_ok INSTALL "SpaveVim ok!"
+            log_ok INSTALL "SpaceVim ok!"
+        else
+            log_e INSTALL "SpaceVim fail!"
         fi
     fi
 
     log_i CONF "configure SpaceVim"
     cp -f config/spacevim.conf ~/.SpaceVim.d/init.toml
+    cp -f config/myspacevim.vim ~/.SpaceVim/autoload/myspacevim.vim
 }
 
 clear_target() {
